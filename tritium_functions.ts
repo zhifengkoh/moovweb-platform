@@ -147,3 +147,182 @@
   %new_class = normalize(%class)
   attribute("class", %new_class)
 }
+
+########################################
+# XMLNode.yield_to_preceding_sibling() #
+########################################
+# @desc
+# -----
+# While iterating over a set of %search_nodes, this function helps you
+# target the closest preceding %target_node, and then yields to a Tritium block.
+#
+# For example, this can be used to perform operations such as removing all 
+# occurences of a node type that only appear before a
+# second type of node (identified by some other characteristic, such as an attribute or
+# the presence of specific child nodes).
+#
+# See an example: http://play.tritium.io/56a9fabea91293bbb56a3e194efabd83c409f1cd
+#
+# @args
+# -----
+# @arg Text %search_node => The node that indicates the presence of the %target_node
+# @arg Text %target_node => The node that you want to perform Tritium operations on
+#
+# @usage
+# ======
+# @html_before
+# ------------
+# <ul>
+#   <li></li>
+#   <li></li>
+#   <li class="sublist"></li>
+#   <li></li>
+#   <li></li>
+#   <li></li>
+#   <li class="sublist"></li>
+#   <li></li>
+#   <li></li>
+#   <li class="sublist"></li>
+#   <li></li>
+# </ul>
+#
+# @example
+# --------
+# $("ul") {
+#   yield_to_preceding_sibling("li[@class='sublist']", "li[not(@class='sublist')]") {
+#     remove()
+#   }
+# }
+#
+# @html_after
+# -----------
+# <ul>
+#   <li></li>
+#   <li class="sublist"></li>
+#   <li></li>
+#   <li></li>
+#   <li class="sublist"></li>
+#   <li></li>
+#   <li class="sublist"></li>
+#   <li></li>
+# </ul>
+@func XMLNode.yield_to_preceding_sibling(Text %search_node, Text %target_node) {
+  $(%search_node) {
+    $("preceding-sibling::" + %target_node) {
+      yield()
+    }
+  }
+}
+
+################################
+# XMLNode.yield_if_not_blank() #
+################################
+# !HELPER
+#
+# @desc
+# -----
+# A control function that yields to any nested Tritium code if the argument string is not empty.
+#
+# @args
+# -----
+# @arg Text %str => the string to test for non-emptiness
+@func XMLNode.yield_if_not_blank(Text %str) {
+  match(%str) {
+    with(/^.+$/) {
+      yield()
+    }
+  }
+}
+
+############################
+# XMLNode.yield_if_blank() #
+############################
+# !HELPER
+#
+# @desc
+# -----
+# A control function that yields to any nested Tritium code if the argument string IS empty.
+#
+# @args
+# -----
+# @arg Text %str => the string to test for emptiness
+@func XMLNode.yield_if_blank(Text %str) {
+  match(%str) {
+    with("") {
+      yield()
+    }
+  }
+}
+
+#############################
+# XMLNode.xpath_from_body() #
+#############################
+# !HELPER
+#
+# @desc
+# -----
+# Constructs an XPath expression with /html/body as the root
+#
+# @args
+# -----
+# @arg Text %path => the relative XPath expression
+@func XMLNode.xpath_from_body(Text %path) {
+  %rel_path = %path
+  %rel_path {
+    %regex = "^[\\.]?[\\/]?[\\/]?"
+    replace(regexp(%regex), "")    
+  }
+  %abs_path = "/html/body//" + %rel_path
+}
+
+############################
+# XMLNode.get_image_path() #
+############################
+# !HELPER
+#
+# @desc
+# -----
+# Generates a file path to the default /images directory
+#
+# @args
+# -----
+# @arg Text %filename => the relative path, including file name, of an image file under the images directory, e.g. "icons/menu.png"
+#
+# @return => the full relative path for use with the assets() function
+# 
+# @usage
+# ======
+# @example
+# --------
+# assets(get_image_path('icons/menu.png')) # => assets("images/icons/menu.png")
+@func XMLNode.get_image_path(Text %filename) {
+  %image_path = "images/" + %filename
+}
+
+##############################
+# XMLNode.strip_non-digits() #
+##############################
+# !HELPER
+#
+# @desc
+# -----
+# Removes all non-digit characters from a string.
+#
+# @args
+# -----
+# @arg Text %str => the string to remove all non-digit characters from
+#
+# @return => the new string without any non-digits
+# 
+# @usage
+# ======
+# @example
+# --------
+# strip_non_digits(" (19 items)") # => "19"
+@func XMLNode.strip_non_digits(Text %str) {
+  %new_str = %str
+  %new_str {
+    replace(/\D/, "")
+  }
+  %new_str
+}
